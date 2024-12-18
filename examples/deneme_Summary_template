@@ -1,0 +1,13 @@
+# Extract OSPF neighbor information.
+Value Filldown RouterID (\S+)
+Value Filldown Area (\d+\.\d+\.\d+\.\d+)
+Value NeighborID (\d+\.\d+\.\d+\.\d+)
+Value State (\S+)
+Value Uptime (\d+\S+)
+Value Interface (\S+)
+
+Start
+^OSPF Router ID ${RouterID} in Area ${Area}
+^Neighbor ${NeighborID}\s+State ${State},\s+Uptime ${Uptime},\s+Interface ${Interface}
+
+EOF

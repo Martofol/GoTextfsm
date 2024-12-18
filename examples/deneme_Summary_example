@@ -1,0 +1,4 @@
+OSPF Router ID 10.1.1.1 in Area 0.0.0.0
+Neighbor 10.1.1.2 State FULL, Uptime 3d5h, Interface GigabitEthernet0/0
+Neighbor 10.1.1.3 State FULL, Uptime 1h23m, Interface GigabitEthernet0/1
+Neighbor 10.1.1.4 State INIT, Uptime 5m, Interface GigabitEthernet0/2
