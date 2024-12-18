@@ -127,10 +127,10 @@ func parseCLIOutput(filePath string, fields []TemplateField, patterns []string) 
 
 	//--EndDebuging
 
+	var rePatterns []*regexp.Regexp
 	// Build regex for start patterns
 	for _, pattern := range patterns {
 		combinedRegex := pattern
-		log.Println("Pattern :", pattern)
 		// Replace placeholders (${FieldName}) with named regex groups (?P<FieldName>regex)
 		for _, field := range fields {
 			placeholder := fmt.Sprintf("${%s}", field.Name)
@@ -143,11 +143,14 @@ func parseCLIOutput(filePath string, fields []TemplateField, patterns []string) 
 		if err != nil {
 			log.Fatalf("Error compiling regex: %s", err)
 		}
+		rePatterns = append(rePatterns, re)
+	}
 
-		// Parse CLI output
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			line := scanner.Text()
+	// Parse CLI output
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		for _, re := range rePatterns {
 			if re.MatchString(line) {
 				match := re.FindStringSubmatch(line)
 
@@ -158,11 +161,10 @@ func parseCLIOutput(filePath string, fields []TemplateField, patterns []string) 
 				}
 			}
 		}
-
-		if err := scanner.Err(); err != nil {
-			log.Fatalf("Error reading CLI output file: %s", err)
-		}
 	}
 
+	if err := scanner.Err(); err != nil {
+		log.Fatalf("Error reading CLI output file: %s", err)
+	}
 	return records
 }
