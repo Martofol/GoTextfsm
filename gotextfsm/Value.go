@@ -22,7 +22,7 @@ func CreateNewTextFSMValue(textFSMValue TextFSMValue) TextFSMValue {
 
 func (t *TextFSMValue) CheckFieldsValidness() {
 	var errList []error
-	addError(&errList, t.hasValidName())
+	addError(&errList, t.isValidName())
 	addError(&errList, t.isValidRegex())
 	addError(&errList, t.isValidOption())
 
@@ -34,11 +34,11 @@ func (t *TextFSMValue) CheckFieldsValidness() {
 	}
 }
 
-func (t *TextFSMValue) hasValidName() error {
-	if len(t.Name) < MAX_NAME_LEN {
-		return nil
+func (t *TextFSMValue) isValidName() error {
+	if len(t.Name) > MAX_NAME_LEN {
+		return fmt.Errorf("the %s name is too long it needs to be under 48 letter", t.Name)
 	}
-	return fmt.Errorf("the %s name is too long it needs to be under 48 letter", t.Name)
+	return nil
 }
 
 func (t *TextFSMValue) isValidRegex() error {

@@ -11,7 +11,7 @@ var emptyLineCount int
 func CheckTheLineForValueField(fields *[]TextFSMValue, line string, lineNum int) error {
 	if strings.HasPrefix(line, "Start") {
 		if len(*fields) <= 0 {
-			return fmt.Errorf("\n In Line : %d / Value lines needs declared before start", lineNum)
+			return fmt.Errorf("\n In Line : %d / Value lines needs to be declared before Start", lineNum)
 		}
 		if emptyLineCount < 1 {
 			return fmt.Errorf("\n In Line : %d / There sould be one empty line between Values and Start", lineNum)
@@ -23,7 +23,7 @@ func CheckTheLineForValueField(fields *[]TextFSMValue, line string, lineNum int)
 		emptyLineCount = 0
 	}
 	if emptyLineCount >= 1 {
-		return fmt.Errorf("\n In Line : %d / There shouldnt be empty lines between values or more than one empty lines before Start key Word", lineNum)
+		return fmt.Errorf("\n In Line : %d / There shouldnt be any empty lines between values or more than one empty lines before Start key word", lineNum)
 	}
 	if len(line) <= 0 {
 		if len(*fields) <= 0 {

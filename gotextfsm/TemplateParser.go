@@ -10,9 +10,9 @@ import (
 type ParserState int
 
 const (
-	DEFAULT ParserState = iota
-	VALUE_DECLERATION
+	VALUE_DECLERATION ParserState = iota
 	START
+	END
 )
 
 func (r ParserState) String() string {
@@ -34,6 +34,7 @@ func ParseTemplateFile(filePath string) ([]TextFSMValue, []StartPattern) {
 	var StartPatterns []StartPattern
 	lineNum := 0
 	scanner := bufio.NewScanner(file)
+OuterLoop:
 	for scanner.Scan() {
 		lineNum++
 		line := scanner.Text()
@@ -52,8 +53,11 @@ func ParseTemplateFile(filePath string) ([]TextFSMValue, []StartPattern) {
 			if err != nil {
 				log.Fatalf("\nError occured : %s ", err)
 			}
+		case END:
+			log.Println("States has been finished!!")
+			break OuterLoop
 		default:
-			log.Fatalln("State for parser Couldnt Found")
+			log.Fatalf("\nLine %d : State for parser Couldnt Found", lineNum)
 		}
 	}
 
