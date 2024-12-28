@@ -2,18 +2,18 @@ package main
 
 import (
 	"GoTextfsm/gotextfsm"
-	"fmt"
-	"strings"
+	"log"
 )
 
 func main() {
 	cliFile := "./examples/f10_ip_bgp_summary_example"
 	templateFile := "./examples/f10_ip_bgp_summary_template"
 
-	data := gotextfsm.Parser(templateFile, cliFile)
-	// Display results
-	fmt.Println("\nExtracted Records:")
-	for _, recordName := range data.Name {
-		fmt.Printf("\n  %s: %s", recordName, strings.Join(data.Value[recordName], " , "))
+	tFSM := gotextfsm.NewTextFSM()
+	err := tFSM.ParseTemplate(templateFile)
+	if err != nil {
+		log.Fatalln("TFSM Error", err)
 	}
+	data := gotextfsm.CreateParsedOutput(cliFile, &tFSM)
+	log.Println("Parsed output :\n", data.Dict)
 }
