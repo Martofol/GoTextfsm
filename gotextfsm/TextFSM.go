@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"strings"
 )
 
@@ -72,11 +71,10 @@ func (tFSM *TextFSM) ParseTemplate(templateFilePath string) error {
 				fieldName = parts[1]
 				fieldRegexSTR = strings.Join(parts[2:], " ")
 			}
-			fieldRegex, err := regexp.Compile(fieldRegexSTR)
 			if err != nil {
 				return &TextFSMError{msg: fmt.Sprintf("Line : %d / Failed regex compile Error : %s", lineNum, err)}
 			}
-			tValue := NewTextFSMValue(TextFSMValue{Options: options, Name: fieldName, Regex: fieldRegex, LineNum: lineNum})
+			tValue := NewTextFSMValue(TextFSMValue{Options: options, Name: fieldName, Regex: fieldRegexSTR, LineNum: lineNum})
 			_, exist := tFSM.values[fieldName]
 			if exist {
 				return &TextFSMError{msg: fmt.Sprintf("Line : %d / the value name %s is already declared before", lineNum, fieldName)}
@@ -156,14 +154,20 @@ func (tFSM *TextFSM) validateFSM() error {
 	return nil
 }
 
-func (tFSM *TextFSM) applyValue(valueName string, matchedValue string) error {
+func (tFSM *TextFSM) applyValue(valueName string, matchedValue string) (TextFSMValue, error) {
+
 	if _, exsist := tFSM.values[valueName]; !exsist {
-		return &TextFSMError{msg: fmt.Sprintf("Value name %s does not exsist in saved value fields", valueName)}
+		return TextFSMValue{}, &TextFSMError{msg: fmt.Sprintf("Value name %s does not exsist in saved value fields", valueName)}
 	}
 	tValue := tFSM.values[valueName]
+	// if strings.Contains(tValue.Regex.String(), "(?P") {
+
+	// } else {
+
+	// }
 	tValue.AssignVar(matchedValue)
 	tFSM.values[valueName] = tValue
-	return nil
+	return tFSM.values[valueName], nil
 }
 
 // raiseError raises an error with the given message.

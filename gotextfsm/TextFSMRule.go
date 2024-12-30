@@ -9,11 +9,11 @@ import (
 
 // TextFSMRule represents a rule in the FSM, including a regex pattern, line and record operations, and state transition.
 type TextFSMRule struct {
-	match    string         // Regular expression to match against input lines
-	regex    *regexp.Regexp // Compiled regular expression
-	lineOp   string         // Line operation (Next, Continue, etc.)
-	recordOp string         // Record operation (Record, Clear, etc.)
-	newState string         // The next state to transition to
+	match    string // Regular expression to match against input lines
+	regex    string // Compiled regular expression
+	lineOp   string // Line operation (Next, Continue, etc.)
+	recordOp string // Record operation (Record, Clear, etc.)
+	newState string // The next state to transition to
 }
 
 var LINE_OPs = []string{"Continue", "Next"}
@@ -43,17 +43,9 @@ func NewTextFSMRule(line string, fields *map[string]TextFSMValue) TextFSMRule {
 		if err != nil {
 			log.Fatalln("Rule Operator Error : ", err)
 		}
-		re, err := regexp.Compile(match[1])
-		if err != nil {
-			log.Fatalln("Error :", err)
-		}
-		newTRule.regex = re
+		newTRule.regex = strings.TrimSpace(match[1])
 	} else {
-		re, err := regexp.Compile(line)
-		if err != nil {
-			log.Fatalln("Error :", err)
-		}
-		newTRule.regex = re
+		newTRule.regex = strings.TrimSpace(line)
 	}
 	return newTRule
 }

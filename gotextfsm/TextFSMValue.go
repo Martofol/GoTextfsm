@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 )
 
 type TextFSMValue struct {
-	Options       []string       // Options associated with the value (optional)
-	Name          string         // Name of the variable
-	Regex         *regexp.Regexp // Compiled regex for matching input text
-	Value         interface{}    // The value extracted from the match
+	Options       []string    // Options associated with the value (optional)
+	Name          string      // Name of the variable
+	Regex         string      // Compiled regex for matching input text
+	Value         interface{} // The value extracted from the match
 	FillDownValue interface{}
 	LineNum       int
 }
@@ -55,13 +56,18 @@ func (t *TextFSMValue) isValidName() error {
 
 func (t *TextFSMValue) isValidRegex() error {
 	// Regular expression to check if the string starts and ends with parentheses
-	reString := t.Regex.String()
-	matched, _ := regexp.MatchString(`^\(.*\)$`, reString)
+	matched, _ := regexp.MatchString(`^\(.*\)$`, t.Regex)
 	if matched {
-		return nil
+		//remove the most outer parantheses here
+		t.Regex = t.Regex[1 : len(t.Regex)-1]
 	} else {
 		return fmt.Errorf("the %s Regex must be enclosed with parentheses", t.Regex)
 	}
+	if strings.Count(t.Regex, "(") != strings.Count(t.Regex, ")") {
+		return fmt.Errorf(" %s Value regex '%s' must be contained within a '()' pair. ", t.Name, t.Regex)
+	}
+
+	return nil
 }
 
 func (t *TextFSMValue) isValidOption() error {
@@ -75,9 +81,21 @@ func (t *TextFSMValue) isValidOption() error {
 	return nil
 }
 
-func (t *TextFSMValue) AssignVar(matchedValue interface{}) {
-	var finalVal interface{}
-	finalVal = matchedValue
+func (t *TextFSMValue) AssignVar(matchedValue string) {
+	var finalVal interface{} = matchedValue
+	if Contains(&t.Options, "List") {
+		if t.Value == nil {
+			if Contains(&t.Options, "Filldown") && t.FillDownValue != nil {
+				finalVal = append(t.FillDownValue.([]string), matchedValue)
+			} else {
+				finalVal = make([]string, 0)
+				finalVal = append(finalVal.([]string), matchedValue)
+			}
+		} else {
+			finalVal = append(t.Value.([]string), matchedValue)
+		}
+
+	}
 	if Contains(&t.Options, "Filldown") {
 		t.FillDownValue = finalVal
 	}

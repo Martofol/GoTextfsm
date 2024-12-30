@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 )
 
 type ParserOutput struct {
@@ -51,21 +52,35 @@ func (output *ParserOutput) ParseData(dataFilePath string, tFSM *TextFSM) error 
 
 func (output *ParserOutput) checkLine(line string, tFSM *TextFSM) {
 	for _, rule := range tFSM.states[tFSM.currentState] {
-		// log.Println("ruleRegex = ", rule.regex)
-		if rule.regex.MatchString(line) {
-			match := rule.regex.FindStringSubmatch(line)
-			// log.Println("	RRegrex.SubexpNames = ", rule.regex.SubexpNames())
-			for i, name := range rule.regex.SubexpNames() {
+		ruleRegex := regexp.MustCompile(rule.regex)
+		if ruleRegex.MatchString(line) {
+			match := ruleRegex.FindStringSubmatch(line)
+			for i, name := range ruleRegex.SubexpNames() {
 				if i != 0 && name != "" {
-					tFSM.applyValue(name, match[i])
+					newVal, err := tFSM.applyValue(name, match[i])
+					if err != nil {
+						log.Fatalf("\n Value field error : %s", err)
+					}
+					if Contains(&newVal.Options, "Fillup") && newVal.Value != nil && output.Dict != nil {
+						for i := len(output.Dict) - 1; i >= 0; i-- {
+							if output.Dict[i][name] == nil {
+								output.Dict[i][name] = newVal.Value
+							} else {
+								break
+							}
+						}
+					}
 				}
 			}
-			output.HandleOperations(tFSM, &rule)
+			next := output.HandleOperations(tFSM, &rule)
+			if next {
+				break
+			}
 		}
 	}
 }
 
-func (output *ParserOutput) HandleOperations(tFSM *TextFSM, rule *TextFSMRule) {
+func (output *ParserOutput) HandleOperations(tFSM *TextFSM, rule *TextFSMRule) bool {
 
 	//Handle record operations
 	switch rule.recordOp {
@@ -88,10 +103,12 @@ func (output *ParserOutput) HandleOperations(tFSM *TextFSM, rule *TextFSMRule) {
 			tFSM.changeState(rule.newState)
 			output.currentStateName = tFSM.currentState
 		}
+		return true
 	case "Error":
 		// Handle error, raise an exception
 		tFSM.raiseError(fmt.Sprintf("Error raised in Template: %s", rule.match))
 	}
+	return false
 }
 
 // means create the row with the values of tfsm

@@ -6,8 +6,8 @@ import (
 )
 
 func main() {
-	cliFile := "./examples/f10_ip_bgp_summary_example"
-	templateFile := "./examples/f10_ip_bgp_summary_template"
+	cliFile := "./examples/cisco_ipv6_interface_example"
+	templateFile := "./examples/cisco_ipv6_interface_template"
 
 	tFSM := gotextfsm.NewTextFSM()
 	err := tFSM.ParseTemplate(templateFile)
