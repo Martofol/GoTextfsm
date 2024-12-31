@@ -154,20 +154,36 @@ func (tFSM *TextFSM) validateFSM() error {
 	return nil
 }
 
-func (tFSM *TextFSM) applyValue(valueName string, matchedValue string) (TextFSMValue, error) {
-
-	if _, exsist := tFSM.values[valueName]; !exsist {
-		return TextFSMValue{}, &TextFSMError{msg: fmt.Sprintf("Value name %s does not exsist in saved value fields", valueName)}
+func (tFSM *TextFSM) applyValue(matchedValues []string, matchedNames []string) ([]TextFSMValue, error) {
+	fillUpValues := make([]TextFSMValue, 0)
+	varMap := make(map[string]string, 0)
+	for i, name := range matchedNames {
+		if i != 0 && name != "" {
+			varMap[name] = matchedValues[i]
+		}
 	}
-	tValue := tFSM.values[valueName]
-	// if strings.Contains(tValue.Regex.String(), "(?P") {
-
-	// } else {
-
-	// }
-	tValue.AssignVar(matchedValue)
-	tFSM.values[valueName] = tValue
-	return tFSM.values[valueName], nil
+	if len(varMap) > 0 {
+		for key, value := range varMap {
+			newValObj, exsist := tFSM.values[key]
+			if !exsist {
+				continue
+			}
+			if strings.Contains(newValObj.Regex, "(?P") {
+				newValObj.AssignMapVar(varMap)
+			} else {
+				newValObj.AssignVar(value)
+			}
+			if Contains(&newValObj.Options, "Fillup") && newValObj.Value != nil {
+				fillUpValues = append(fillUpValues, newValObj)
+			}
+			tFSM.values[key] = newValObj
+		}
+	}
+	// tValue := tFSM.values[valueName]
+	// tValue.AssignVar(matchedValue)
+	// tFSM.values[valueName] = tValue
+	// return tFSM.values[valueName], nil
+	return fillUpValues, nil
 }
 
 // raiseError raises an error with the given message.

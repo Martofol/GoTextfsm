@@ -55,19 +55,17 @@ func (output *ParserOutput) checkLine(line string, tFSM *TextFSM) {
 		ruleRegex := regexp.MustCompile(rule.regex)
 		if ruleRegex.MatchString(line) {
 			match := ruleRegex.FindStringSubmatch(line)
-			for i, name := range ruleRegex.SubexpNames() {
-				if i != 0 && name != "" {
-					newVal, err := tFSM.applyValue(name, match[i])
-					if err != nil {
-						log.Fatalf("\n Value field error : %s", err)
-					}
-					if Contains(&newVal.Options, "Fillup") && newVal.Value != nil && output.Dict != nil {
-						for i := len(output.Dict) - 1; i >= 0; i-- {
-							if output.Dict[i][name] == nil {
-								output.Dict[i][name] = newVal.Value
-							} else {
-								break
-							}
+			fillupVals, err := tFSM.applyValue(match, ruleRegex.SubexpNames())
+			if err != nil {
+				log.Fatalf("\n Value field error : %s", err)
+			}
+			for _, val := range fillupVals {
+				if output.Dict != nil {
+					for i := len(output.Dict) - 1; i >= 0; i-- {
+						if output.Dict[i][val.Name] == "Null" {
+							output.Dict[i][val.Name] = val.Value
+						} else {
+							break
 						}
 					}
 				}
@@ -121,8 +119,6 @@ func (output *ParserOutput) appendRecord(tFSM TextFSM) {
 		case SKIP_RECORD:
 			output.clearRecord(tFSM)
 			return
-		case SKIP_VALUE:
-			newRow[name] = nil
 		case CONTINUE:
 			newRow[name] = value.GetFinalValue()
 			if !value.isEmpty() {
@@ -130,7 +126,6 @@ func (output *ParserOutput) appendRecord(tFSM TextFSM) {
 			}
 		}
 	}
-
 	if containsValue {
 		output.Dict = append(output.Dict, newRow)
 	}
