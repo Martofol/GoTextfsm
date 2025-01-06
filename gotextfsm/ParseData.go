@@ -1,11 +1,10 @@
 package gotextfsm
 
 import (
-	"bufio"
 	"fmt"
 	"log"
-	"os"
 	"regexp"
+	"strings"
 )
 
 type ParserOutput struct {
@@ -14,35 +13,29 @@ type ParserOutput struct {
 	currentStateName string
 }
 
-func CreateParsedOutput(dataFilePath string, tFSM *TextFSM) ParserOutput {
+func CreateParsedOutput(stringData string, tFSM *TextFSM) ParserOutput {
 	parserOutput := ParserOutput{
 		Dict:             make([]map[string]interface{}, 0),
 		lineNum:          0,       //default number
 		currentStateName: "Start", //default state name
 	}
-	parserOutput.ParseData(dataFilePath, tFSM)
+	parserOutput.ParseData(stringData, tFSM)
 	return parserOutput
 }
 
-func (output *ParserOutput) ParseData(dataFilePath string, tFSM *TextFSM) error {
+func (output *ParserOutput) ParseData(stringData string, tFSM *TextFSM) error {
 	if tFSM.currentState != "Start" {
 		return &TextFSMError{msg: fmt.Sprintf("\n Text Fsm needs to start with Start state current state : %s", tFSM.currentState)}
 	}
 	output.currentStateName = tFSM.currentState
 	lineNum := 0
-	file, err := os.Open(dataFilePath)
-	if err != nil {
-		return &TextFSMError{msg: fmt.Sprintf("Failed to open CLI output file: %s", err)}
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		lineNum++
+	lines := strings.Split(stringData, "\n")
+	for i, line := range lines {
+		lineNum = i
 		output.lineNum = lineNum
 		output.checkLine(line, tFSM)
 		if output.currentStateName == "EOf" || output.currentStateName == "End" {
-			log.Println("EOF has been called")
+			// log.Println("EOF has been called")
 			break
 		}
 	}

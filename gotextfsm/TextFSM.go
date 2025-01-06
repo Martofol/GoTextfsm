@@ -32,13 +32,9 @@ func NewTextFSM() TextFSM {
 	}
 }
 
-func (tFSM *TextFSM) ParseTemplate(templateFilePath string) error {
-	file, err := os.Open(templateFilePath)
-	if err != nil {
-		log.Fatalf("Failed to open template file: %s", err)
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
+func (tFSM *TextFSM) ParseTemplate(templateFile *os.File) error {
+	defer templateFile.Close()
+	scanner := bufio.NewScanner(templateFile)
 	lineNum := 0
 	var stateName string
 	for scanner.Scan() {
@@ -70,9 +66,6 @@ func (tFSM *TextFSM) ParseTemplate(templateFilePath string) error {
 
 				fieldName = parts[1]
 				fieldRegexSTR = strings.Join(parts[2:], " ")
-			}
-			if err != nil {
-				return &TextFSMError{msg: fmt.Sprintf("Line : %d / Failed regex compile Error : %s", lineNum, err)}
 			}
 			tValue := NewTextFSMValue(TextFSMValue{Options: options, Name: fieldName, Regex: fieldRegexSTR, LineNum: lineNum})
 			_, exist := tFSM.values[fieldName]
@@ -109,7 +102,7 @@ func (tFSM *TextFSM) ParseTemplate(templateFilePath string) error {
 		}
 	}
 	// Validate FSM
-	err = tFSM.validateFSM()
+	err := tFSM.validateFSM()
 	if err != nil {
 		log.Fatalln("FSM validation error:", err)
 	}
@@ -179,10 +172,6 @@ func (tFSM *TextFSM) applyValue(matchedValues []string, matchedNames []string) (
 			tFSM.values[key] = newValObj
 		}
 	}
-	// tValue := tFSM.values[valueName]
-	// tValue.AssignVar(matchedValue)
-	// tFSM.values[valueName] = tValue
-	// return tFSM.values[valueName], nil
 	return fillUpValues, nil
 }
 
